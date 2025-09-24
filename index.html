@@ -21,6 +21,7 @@
 </head>
 <body>
   <h1>コラッツ予想検証ツール</h1>
+    <h3>このツールの使い方などは、<a href="https://github.com/cod-git12/open-question.val-tool.math.collatz">https://github.com/cod-git12/open-question.val-tool.math.collatz</a> を見てください。</h3>
 
   <label>
     開始数値:
@@ -74,7 +75,7 @@
     // 範囲内の数値をテスト（チャンク処理）
     function testRange(start, end, maxSteps, onProgress) {
       const results = [];
-      const chunkSize = 1000; // 1回に処理する数
+      const chunkSize = 3000; // 1回に処理する数
       let current = start;
 
       function processChunk() {
@@ -112,7 +113,7 @@
 
       let output = "";
       filteredResults.forEach(({ n, steps, reachedOne }) => {
-        output += `計測数値: ${n}  1に到達${reachedOne ? "した" : "しない"}  必要ステップ: ${steps}\n`;
+        output += `計測数値: ${n}  1に到達${reachedOne ? "した" : "していない"}  必要ステップ: ${steps}\n`;
       });
       outputDiv.textContent = output;
     }
@@ -128,15 +129,15 @@
 
       // 入力バリデーション
       if (!Number.isInteger(startN) || startN < 1) {
-        outputDiv.innerHTML = '<span class="error">開始数値は正の整数で入力してください。</span>';
+        outputDiv.innerHTML = '<span class="error">開始数値は自然数で入力してください。</span>';
         return;
       }
       if (!Number.isInteger(endN) || endN < startN) {
-        outputDiv.innerHTML = '<span class="error">終了数値は開始数値以上の正の整数で入力してください。</span>';
+        outputDiv.innerHTML = '<span class="error">終了数値は開始数値以上の自然数で入力してください。</span>';
         return;
       }
       if (!Number.isInteger(maxSteps) || maxSteps < 1) {
-        outputDiv.innerHTML = '<span class="error">最大ステップは正の整数で入力してください。</span>';
+        outputDiv.innerHTML = '<span class="error">最大ステップは自然数で入力してください。</span>';
         return;
       }
 
