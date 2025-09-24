@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>コラッツ予想検証ツール</title>
+  <style>
+    #output {
+      white-space: pre-wrap;
+      font-family: monospace;
+      background: #f8f8f8;
+      padding: 1em;
+      border: 1px solid #ddd;
+      max-height: 60vh;
+      overflow: auto;
+    }
+    .row { margin: 0.25em 0; }
+    .error { color: red; }
+    .progress { color: blue; }
+  </style>
+</head>
+<body>
+  <h1>コラッツ予想検証ツール</h1>
+
+  <label>
+    開始数値:
+    <input id="startN" type="number" value="1" min="1" />
+  </label>
+  <br/>
+  <label>
+    終了数値:
+    <input id="endN" type="number" value="1000" min="1" />
+  </label>
+  <br/>
+  <label>
+    最大ステップ:
+    <input id="maxSteps" type="number" value="10000" min="1" />
+  </label>
+  <br/>
+  <label>
+    <input id="showOnlyNotReached" type="checkbox" />
+    到達しなかったもののみ表示
+  </label>
+  <br/>
+  <button id="runBtn">検証を実行</button>
+
+  <h2>結果</h2>
+  <div id="progress" class="progress"></div>
+  <div id="output"></div>
+
+  <script>
+
+    // 次の値を返す
+    function collatzStep(n) {
+      if (n <= 0) throw new Error("n must be a positive integer");
+      if (n % 2 === 0) return Math.floor(n / 2);
+      return n * 3 + 1;
+    }
+
+    // n_start から 1 になるまでの過程を返す
+    function collatzUntilOne(n, maxSteps = 10000) {
+      if (!Number.isInteger(n) || n <= 0) throw new Error("n must be a positive integer");
+      let current = n;
+      for (let steps = 1; steps <= maxSteps; steps++) {
+        current = collatzStep(current);
+        if (current === 1) {
+          return { steps, reachedOne: true };
+        }
+      }
+      // 未到達
+      return { steps: maxSteps, reachedOne: false };
+    }
+
+    // 範囲内の数値をテスト（チャンク処理）
+    function testRange(start, end, maxSteps, onProgress) {
+      const results = [];
+      const chunkSize = 1000; // 1回に処理する数
+      let current = start;
+
+      function processChunk() {
+        const chunkEnd = Math.min(current + chunkSize - 1, end);
+        for (let n = current; n <= chunkEnd; n++) {
+          const result = collatzUntilOne(n, maxSteps);
+          results.push({ n, ...result });
+        }
+        current = chunkEnd + 1;
+
+        // 進捗更新
+        const progress = Math.round(((current - start) / (end - start + 1)) * 100);
+        onProgress(progress, results);
+
+        if (current <= end) {
+          setTimeout(processChunk, 0); // 次のチャンクを非同期で処理
+        }
+      }
+
+      processChunk();
+      return results;
+    }
+
+    // 結果を表示（フィルタリング付き）
+    function displayResults(results, showOnlyNotReached) {
+      const outputDiv = document.getElementById("output");
+      const filteredResults = showOnlyNotReached
+        ? results.filter(result => !result.reachedOne)
+        : results;
+
+      if (filteredResults.length === 0) {
+        outputDiv.textContent = "結果がありません。";
+        return;
+      }
+
+      let output = "";
+      filteredResults.forEach(({ n, steps, reachedOne }) => {
+        output += `計測数値: ${n}  1に到達${reachedOne ? "した" : "しない"}  必要ステップ: ${steps}\n`;
+      });
+      outputDiv.textContent = output;
+    }
+
+    // ボタンクリック時の処理
+    document.getElementById("runBtn").addEventListener("click", () => {
+      const startN = parseInt(document.getElementById("startN").value);
+      const endN = parseInt(document.getElementById("endN").value);
+      const maxSteps = parseInt(document.getElementById("maxSteps").value);
+      const showOnlyNotReached = document.getElementById("showOnlyNotReached").checked;
+      const outputDiv = document.getElementById("output");
+      const progressDiv = document.getElementById("progress");
+
+      // 入力バリデーション
+      if (!Number.isInteger(startN) || startN < 1) {
+        outputDiv.innerHTML = '<span class="error">開始数値は正の整数で入力してください。</span>';
+        return;
+      }
+      if (!Number.isInteger(endN) || endN < startN) {
+        outputDiv.innerHTML = '<span class="error">終了数値は開始数値以上の正の整数で入力してください。</span>';
+        return;
+      }
+      if (!Number.isInteger(maxSteps) || maxSteps < 1) {
+        outputDiv.innerHTML = '<span class="error">最大ステップは正の整数で入力してください。</span>';
+        return;
+      }
+
+      // 初期化
+      outputDiv.textContent = "";
+      progressDiv.textContent = "計算中: 0%";
+      document.getElementById("runBtn").disabled = true;
+
+      // 計算と進捗表示
+      const results = [];
+      testRange(startN, endN, maxSteps, (progress, partialResults) => {
+        progressDiv.textContent = `計算中: ${progress}%`;
+        if (progress === 100) {
+          progressDiv.textContent = "計算完了";
+          document.getElementById("runBtn").disabled = false;
+          displayResults(partialResults, showOnlyNotReached);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
