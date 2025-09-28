@@ -1,7 +1,7 @@
 # 数学未解決問題　検証ツール　【コラッツ予想】 Ver.1.7.0
 
 このツールは、数学の未解決問題である、**`コラッツ予想`** を検証するためのツールです。
-バージョン 1.5.0
+バージョン 1.7.0
 
 このツールは、https://cod-git12.github.io/open-question.val-tool.math.collatz/index.html ここで使用できます。
 
