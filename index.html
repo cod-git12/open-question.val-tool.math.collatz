@@ -17,12 +17,26 @@
     .row { margin: 0.25em 0; }
     .error { color: red; }
     .progress { color: blue; }
+    /* 訪問者カウンター用のスタイル */
+    #visitorCounter {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #e0e0e0;
+      padding: 0.5em 1em;
+      border-radius: 5px;
+      font-size: 1em;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
+  <!-- 訪問者カウンターの表示要素 -->
+  <div id="visitorCounter">あなたは0人目の訪問者です！</div>
+
   <h1>コラッツ予想検証ツール Ver.1.6.0</h1>
-    <h3>このツールの使い方などは、<a href="https://github.com/cod-git12/open-question.val-tool.math.collatz">https://github.com/cod-git12/open-question.val-tool.math.collatz</a> を見てください。</h3>
-      <h4>このツールは、MIT Licenseで保護されています。　<a href="https://github.com/cod-git12/open-question.val-tool.math.collatz/blob/main/LICENSE">https://github.com/cod-git12/open-question.val-tool.math.collatz/blob/main/LICENSE</a></a></h4>
+  <h3>このツールの使い方などは、<a href="https://github.com/cod-git12/open-question.val-tool.math.collatz">https://github.com/cod-git12/open-question.val-tool.math.collatz</a> を見てください。</h3>
+  <h4>このツールは、MIT Licenseで保護されています。　<a href="https://github.com/cod-git12/open-question.val-tool.math.collatz/blob/main/LICENSE">https://github.com/cod-git12/open-question.val-tool.math.collatz/blob/main/LICENSE</a></h4>
   <label>
     開始数値:
     <input id="startN" type="number" value="1" min="1" />
@@ -50,6 +64,20 @@
   <div id="output"></div>
 
   <script>
+    // 訪問者カウンターの処理
+    function updateVisitorCounter() {
+      let visitorCount = localStorage.getItem('visitorCount');
+      if (!visitorCount) {
+        visitorCount = 1;
+      } else {
+        visitorCount = parseInt(visitorCount) + 1;
+      }
+      localStorage.setItem('visitorCount', visitorCount);
+      document.getElementById('visitorCounter').textContent = `あなたは${visitorCount}人目の訪問者です！`;
+    }
+
+    // ページ読み込み時にカウンターを更新
+    window.onload = updateVisitorCounter;
 
     // 次の値を返す
     function collatzStep(n) {
@@ -68,14 +96,13 @@
           return { steps, reachedOne: true };
         }
       }
-      // 未到達
       return { steps: maxSteps, reachedOne: false };
     }
 
     // 範囲内の数値をテスト（チャンク処理）
     function testRange(start, end, maxSteps, onProgress) {
       const results = [];
-      const chunkSize = 3000; // 1回に処理する数
+      const chunkSize = 3000;
       let current = start;
 
       function processChunk() {
@@ -86,12 +113,11 @@
         }
         current = chunkEnd + 1;
 
-        // 進捗更新
         const progress = Math.round(((current - start) / (end - start + 1)) * 100);
         onProgress(progress, results);
 
         if (current <= end) {
-          setTimeout(processChunk, 0); // 次のチャンクを非同期で処理
+          setTimeout(processChunk, 0);
         }
       }
 
@@ -127,7 +153,6 @@
       const outputDiv = document.getElementById("output");
       const progressDiv = document.getElementById("progress");
 
-      // 入力バリデーション
       if (!Number.isInteger(startN) || startN < 1) {
         outputDiv.innerHTML = '<span class="error">開始数値は自然数で入力してください。</span>';
         return;
@@ -141,12 +166,10 @@
         return;
       }
 
-      // 初期化
       outputDiv.textContent = "";
       progressDiv.textContent = "計算中: 0%";
       document.getElementById("runBtn").disabled = true;
 
-      // 計算と進捗表示
       const results = [];
       testRange(startN, endN, maxSteps, (progress, partialResults) => {
         progressDiv.textContent = `計算中: ${progress}%`;
